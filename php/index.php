@@ -16,10 +16,11 @@
     <div class="main">
         <div class="counter">
             <div class="title" data-toggle="animation" data-mdb-animation-start='onLoad' data-mdb-animation='slide-in-down' data-mdb-animation-reset="true">
+                <h1 class='placeholder_new_year'>Countdown to new year</h1>
                 <?php
                     $current_year = date('Y');
-                    echo "<h1 class='test'>Compte à rebours avant " . $current_year + 1 . "</h1>"
-                ?>                
+                    echo "<h1 class='new_year'>" . $current_year + 1 . "</h1>";
+                ?>           
             </div>
             <div class="time_before_new_year">
                 <?php

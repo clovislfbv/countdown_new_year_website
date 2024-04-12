@@ -3,9 +3,9 @@ var $j = jQuery.noConflict();
 $j(document).ready(function () {
     var final_year = new Date().getFullYear() + 1;
 
-    $j(".test").css({
-        'top': -$j(".test").outerHeight(),
-    });
+    // $j(".placeholder").css({
+    //     'top': -$j(".placeholder").outerHeight(),
+    // });
 
     setInterval(function () {
         var current_time = new Date(); //new Date(2025, 0, 1, 0, 0, 0);
