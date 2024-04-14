@@ -1,6 +1,18 @@
+import { createNewPage } from "./helper.js";
+
 var $j = jQuery.noConflict();
 
 $j(document).ready(function () {
+
+    var name = Math.floor((Math.random() * 1000000000) + 100000000);
+    var content = "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Document</title></head><body><h1>Hello World !</h1></body></html>"
+
+    createNewPage(name, content);
+
+    $j('#qrcode').qrcode({
+        text: "../html/" + name + ".html",
+    });
+
     var final_year = new Date().getFullYear() + 1;
 
     // $j(".placeholder").css({

@@ -8,8 +8,9 @@
     <link rel="stylesheet" type="text/css" href="../css/index.css">
     <script src="../js/bootstrap/bootstrap.min.js"></script>
     <script src="../js/jquery.js"></script>
+    <script src="../js/jquery.qrcode.min.js"></script>
     <script type="module" src="../js/mdb.umd.min.js"></script>
-    <script src="../js/script_website.js"></script>
+    <script src="../js/script_website.js" type="module"></script>
     <title>Countdown to the New Year !!</title>
 </head>
 <body>
@@ -57,6 +58,7 @@
                 ?>
             </div>
         </div>
+        <div id="qrcode"></div>
     </div>
 </body>
 </html>
