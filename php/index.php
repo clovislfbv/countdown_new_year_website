@@ -59,6 +59,38 @@
             </div>
         </div>
         <div id="qrcode"></div>
+        <div id="player"></div>
+            <script>
+            // Load the IFrame Player API code asynchronously.
+            var tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            var firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+            // Replace 'YOUR_VIDEO_ID' with the id of the YouTube video you want to play
+            var videoId = 'dQw4w9WgXcQ';
+
+            // Create an <iframe> (and YouTube player) after the API code downloads.
+            var player;
+            function onYouTubeIframeAPIReady() {
+                player = new YT.Player('player', {
+                height: '0',
+                width: '0',
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1,
+                    loop: 1,
+                    playlist: videoId,
+                    controls: 0,
+                    showinfo: 0,
+                    autohide: 1,
+                    modestbranding: 1,
+                    vq: 'hd1080'
+                },
+                });
+                console.log(player);
+            }
+            </script>
     </div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import { createNewPage } from "./helper.js";
+import { createNewPage, deletePage } from "./helper.js";
 
 var $j = jQuery.noConflict();
 
@@ -18,6 +18,10 @@ $j(document).ready(function () {
     // $j(".placeholder").css({
     //     'top': -$j(".placeholder").outerHeight(),
     // });
+
+    window.onbeforeunload = function (event) {
+        deletePage(name);
+    };
 
     setInterval(function () {
         var current_time = new Date(); //new Date(2025, 0, 1, 0, 0, 0);

@@ -14,3 +14,17 @@ export function createNewPage(name, content) {
         }
     });
 }
+
+export function deletePage(name) {
+    $j.ajax({
+        url: '../php/helper.php',
+        type: 'POST',
+        data: {
+            action: "delete_page",
+            page_name: name
+        },
+        success: function (data) {
+            console.log(data);
+        }
+    });
+}
