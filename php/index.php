@@ -60,10 +60,13 @@
         </div>
         <div id="qrcode"></div>
         <?php
+            $old_path = getcwd();
             $output=null;
             $retval=null;
-            exec('ls', $output, $retval);
+            exec('dir', $output, $retval);
             echo var_dump($output);
+            echo var_dump($retval);
+            echo var_dump($old_path);
         ?>
         <!-- <div class="alert">
         <p>This webpage would like to play sounds</p>
