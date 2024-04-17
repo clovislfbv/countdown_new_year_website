@@ -1,8 +1,16 @@
-import { createNewPage, deletePage } from "./helper.js";
+import { createNewPage, deletePage, getAllPages } from "./helper.js";
 
 var $j = jQuery.noConflict();
 
 $j(document).ready(function () {
+
+    getAllPages();
+
+    // fetch('/api/run_python_code', {
+    //     method: 'POST',
+    // })
+    // .then(response => response.json())
+    // .then(data => console.log(data.result));
 
     var name = Math.floor((Math.random() * 1000000000) + 100000000);
     var content = "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Document</title></head><body><h1>Hello World !</h1></body></html>"

@@ -8,6 +8,10 @@
             case "delete_page":
                 delete_page();
                 break;
+            
+            case "get_all_pages":
+                get_all_pages();
+                break;
         }
     }
 
@@ -22,5 +26,12 @@
     function delete_page(){
         $page_name = $_POST["page_name"];
         unlink("../html/$page_name.html");
+    }
+
+    function get_all_pages(){
+        $output=null;
+        $retval=null;
+        exec('whoami', $output, $retval);
+        echo json_encode($output);
     }
 ?>

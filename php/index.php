@@ -59,37 +59,94 @@
             </div>
         </div>
         <div id="qrcode"></div>
+        <?php
+            $output=null;
+            $retval=null;
+            exec('ls', $output, $retval);
+            echo var_dump($output);
+        ?>
+        <!-- <div class="alert">
+        <p>This webpage would like to play sounds</p>
+        <p class="buttons">
+            <button value="0">Block</button>
+            <button value="1">Allow</button>
+        </p>
+        </div> -->
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=JS8U7hWFcm5G810Fautoplay=1&mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <button id="btn">trigger notification</button>
         <div id="player"></div>
             <script>
+
+            const audio = new Audio( 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley' );
+            audio.play();
+            // audio.muted = true;
+
+            // const alert_elem = document.querySelector( '.alert' );
+
+            // audio.play().then( () => {
+            // // already allowed
+            // alert_elem.remove();
+            // resetAudio();
+            // } )
+            // .catch( () => {
+            // // need user interaction
+            // alert_elem.addEventListener( 'click', ({ target }) => {
+            //     if( target.matches('button') ) {
+            //     const allowed = target.value === "1";
+            //     if( allowed ) {
+            //         audio.play()
+            //         .then( resetAudio );
+            //     }
+            //     alert_elem.remove();
+            //     }
+            // } );
+            // } );
+
+            // document.getElementById( 'btn' ).addEventListener( 'click', (e) => {
+            //     if( audio.muted ) {
+            //         console.log( 'silent notification' );
+            //     }
+            //     else {
+            //         audio.play();
+            //     }
+            //     } );
+
+            // function resetAudio() {
+            // audio.pause();
+            // audio.currentTime = 0;
+            // audio.muted = false;
+            // }
+                
+            
             // Load the IFrame Player API code asynchronously.
-            var tag = document.createElement('script');
-            tag.src = "https://www.youtube.com/iframe_api";
-            var firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            // var tag = document.createElement('script');
+            // tag.src = "https://www.youtube.com/iframe_api";
+            // var firstScriptTag = document.getElementsByTagName('script')[0];
+            // firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-            // Replace 'YOUR_VIDEO_ID' with the id of the YouTube video you want to play
-            var videoId = 'dQw4w9WgXcQ';
+            // // Replace 'YOUR_VIDEO_ID' with the id of the YouTube video you want to play
+            // var videoId = 'dQw4w9WgXcQ';
 
-            // Create an <iframe> (and YouTube player) after the API code downloads.
-            var player;
-            function onYouTubeIframeAPIReady() {
-                player = new YT.Player('player', {
-                height: '0',
-                width: '0',
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 1,
-                    loop: 1,
-                    playlist: videoId,
-                    controls: 0,
-                    showinfo: 0,
-                    autohide: 1,
-                    modestbranding: 1,
-                    vq: 'hd1080'
-                },
-                });
-                console.log(player);
-            }
+            // // Create an <iframe> (and YouTube player) after the API code downloads.
+            // var player;
+            // function onYouTubeIframeAPIReady() {
+            //     player = new YT.Player('player', {
+            //     height: '0',
+            //     width: '0',
+            //     videoId: videoId,
+            //     playerVars: {
+            //         autoplay: 1,
+            //         loop: 1,
+            //         playlist: videoId,
+            //         controls: 0,
+            //         showinfo: 0,
+            //         autohide: 1,
+            //         modestbranding: 1,
+            //         vq: 'hd1080'
+            //     },
+            //     });
+            //     console.log(player);
+            // }
             </script>
     </div>
 </body>

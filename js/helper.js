@@ -28,3 +28,17 @@ export function deletePage(name) {
         }
     });
 }
+
+export function getAllPages() {
+    $j.ajax({
+        url: '../php/helper.php',
+        type: 'POST',
+        async: false,
+        data: {
+            action: "get_all_pages",
+        },
+        success: function (data) {
+            console.log(data);
+        }
+    });
+}
