@@ -1,10 +1,17 @@
-import { createNewPage, deletePage, getAllPages } from "./helper.js";
+import { createNewPage, deletePage, getSong } from "./helper.js";
 
 var $j = jQuery.noConflict();
 
+$j("#btn").click(function () {
+    const audio = new Audio("../php/never_gonna_give_you_up.mp3");
+    audio.play();
+});
+
 $j(document).ready(function () {
 
-    getAllPages();
+    getSong();
+
+    
 
     // fetch('/api/run_python_code', {
     //     method: 'POST',

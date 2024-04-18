@@ -29,16 +29,19 @@ export function deletePage(name) {
     });
 }
 
-export function getAllPages() {
+export function getSong() {
     $j.ajax({
         url: '../php/helper.php',
         type: 'POST',
         async: false,
         data: {
-            action: "get_all_pages",
+            action: "get_song",
         },
         success: function (data) {
             console.log(data);
+        },
+        error: function (err) {
+            console.log(err);
         }
     });
 }

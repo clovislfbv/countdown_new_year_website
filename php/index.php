@@ -59,15 +59,6 @@
             </div>
         </div>
         <div id="qrcode"></div>
-        <?php
-            $old_path = getcwd();
-            $output=null;
-            $retval=null;
-            exec('dir', $output, $retval);
-            echo var_dump($output);
-            echo var_dump($retval);
-            echo var_dump($old_path);
-        ?>
         <!-- <div class="alert">
         <p>This webpage would like to play sounds</p>
         <p class="buttons">
@@ -75,13 +66,11 @@
             <button value="1">Allow</button>
         </p>
         </div> -->
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=JS8U7hWFcm5G810Fautoplay=1&mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         <button id="btn">trigger notification</button>
         <div id="player"></div>
             <script>
 
-            const audio = new Audio( 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley' );
-            audio.play();
+            
             // audio.muted = true;
 
             // const alert_elem = document.querySelector( '.alert' );

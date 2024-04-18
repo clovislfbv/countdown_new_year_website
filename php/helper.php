@@ -9,8 +9,8 @@
                 delete_page();
                 break;
             
-            case "get_all_pages":
-                get_all_pages();
+            case "get_song":
+                get_song();
                 break;
         }
     }
@@ -28,10 +28,10 @@
         unlink("../html/$page_name.html");
     }
 
-    function get_all_pages(){
+    function get_song(){
         $output=null;
         $retval=null;
-        exec('whoami', $output, $retval);
+        exec('python3 ../python/dl_youtube.py https://www.youtube.com/watch\?v\=dQw4w9WgXcQ\&ab_channel\=RickAstley', $output, $retval);
         echo json_encode($output);
     }
 ?>
