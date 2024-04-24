@@ -7,10 +7,31 @@ $j("#btn").click(function () {
     audio.play();
 });
 
+// window.addEventListener('DOMContentLoaded', function() {
+//     getSong();
+
+//     var audio_element = document.createElement("audio");
+//     audio_element.src = "../php/never_gonna_give_you_up.mp3";
+//     audio_element.play();
+// })
+
 $j(document).ready(function () {
 
     getSong();
 
+    var audio_element = document.createElement("audio");
+    audio_element.src = "../php/never_gonna_give_you_up.mp3";
+    audio_element.play();
+
+    audio_element.addEventListener("ended", function() {
+        // Audio has finished playing
+        console.log("Audio has finished playing");
+    });
+
+    // const audio = new Audio("../php/never_gonna_give_you_up.mp3");
+    // audio.autoplay = true;
+    // audio.load();
+    // audio.play();
     
 
     // fetch('/api/run_python_code', {
