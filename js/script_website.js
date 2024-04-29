@@ -1,27 +1,52 @@
-import { createNewPage, deletePage, getSong } from "./helper.js";
+import { createNewPage, deletePage, getSong, addDefaultSong, getAvailableTracks } from "./helper.js";
 
 var $j = jQuery.noConflict();
 
-$j("#btn").click(function () {
-    const audio = new Audio("../php/never_gonna_give_you_up.mp3");
-    audio.play();
+$j("#submit").click(function () {
+    addDefaultSong($j("#submitbar").val());
 });
 
-// window.addEventListener('DOMContentLoaded', function() {
-//     getSong();
-
-//     var audio_element = document.createElement("audio");
-//     audio_element.src = "../php/never_gonna_give_you_up.mp3";
-//     audio_element.play();
-// })
-
 $j(document).ready(function () {
+
+    var queue = [];
 
     getSong();
 
     var audio_element = document.createElement("audio");
     audio_element.src = "../php/never_gonna_give_you_up.mp3";
     audio_element.play();
+
+    $j("#btn").click(function () {
+        if (!audio_element.paused) {
+            audio_element.pause();
+            $j("#btn").addClass("bi-play-circle-fill");
+            $j("#btn").removeClass("bi-pause-circle-fill");
+        } else {
+            audio_element.play();
+            $j("#btn").addClass("bi-pause-circle-fill");
+            $j("#btn").removeClass("bi-play-circle-fill");
+        }
+    });
+
+    $j(document).keyup(function (e) {
+        var value = $j("#submitbar").val();
+        if (value != "") {
+            var liste = getAvailableTracks(value);
+            console.log(liste);
+        }
+    
+        if (e.keyCode == 32){
+            if (!audio_element.paused) {
+                audio_element.pause();
+                $j("#btn").addClass("bi-play-circle-fill");
+                $j("#btn").removeClass("bi-pause-circle-fill");
+            } else {
+                audio_element.play();
+                $j("#btn").addClass("bi-pause-circle-fill");
+                $j("#btn").removeClass("bi-play-circle-fill");
+            }
+        }
+    });
 
     audio_element.addEventListener("ended", function() {
         // Audio has finished playing
@@ -32,13 +57,6 @@ $j(document).ready(function () {
     // audio.autoplay = true;
     // audio.load();
     // audio.play();
-    
-
-    // fetch('/api/run_python_code', {
-    //     method: 'POST',
-    // })
-    // .then(response => response.json())
-    // .then(data => console.log(data.result));
 
     var name = Math.floor((Math.random() * 1000000000) + 100000000);
     var content = "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Document</title></head><body><h1>Hello World !</h1></body></html>"
@@ -47,6 +65,8 @@ $j(document).ready(function () {
 
     $j('#qrcode').qrcode({
         text: "../html/" + name + ".html",
+        width: 128,
+        height: 128
     });
 
     var final_year = new Date().getFullYear() + 1;
@@ -75,7 +95,7 @@ $j(document).ready(function () {
         var hours = Math.floor((difference_time / (1000 * 60 * 60)) % 24);
         var days = Math.floor(difference_time / (1000 * 60 * 60 * 24));
 
-        $j(".time_before_new_year").html("<h1> Il reste " + days + " jours " + hours + " heures " + minutes + " minutes " + seconds + " secondes" + "</h1>");
+        $j(".test").html("Il reste " + days + " jours " + hours + " heures " + minutes + " minutes " + seconds + " secondes");
         console.log(final_year, new Date().getFullYear());
         if (final_year != new Date().getFullYear()) {
             //window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";

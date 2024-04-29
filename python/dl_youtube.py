@@ -12,8 +12,7 @@ yt = YouTube(url)
 # extract only audio 
 video = yt.streams.filter(only_audio=True).first() 
   
-# check for destination to save file 
-print("Enter the destination (leave blank for current directory)") 
+# check for destination to save file
 destination = '.'
   
 # download the file 

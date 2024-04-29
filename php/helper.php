@@ -1,4 +1,6 @@
 <?php
+    include_once("conn.php");
+    
     if (isset($_POST["action"])){
         switch ($_POST["action"]) {
             case "create_new_page":
@@ -11,6 +13,18 @@
             
             case "get_song":
                 get_song();
+                break;
+            
+            case "get_default_songs":
+                get_default_songs();
+                break;
+
+            case "add_default_song":
+                add_default_song();
+                break;
+
+            case "get_available_tracks":
+                get_available_tracks();
                 break;
         }
     }
@@ -33,5 +47,40 @@
         $retval=null;
         exec('python3 ../python/dl_youtube.py https://www.youtube.com/watch\?v\=dQw4w9WgXcQ\&ab_channel\=RickAstley', $output, $retval);
         echo json_encode($output);
+    }
+
+    function get_available_tracks(){
+        session_start();
+        $output=null;
+        $retval=null;
+        $query = $_POST["q"];
+        for ($i = 0; $i < strlen($query); $i++){
+            if ($query[$i] == " "){
+                $query[$i] = "+";
+            }
+        }
+        $bearer_token = $_SESSION["bearer_token"];
+        $request = "curl --request GET --url 'https://api.spotify.com/v1/search?q=" . $query . "&type=track' --header 'Authorization: Bearer " . $bearer_token . "'";
+        print_r($request);
+        exec($request, $output, $retval);
+        echo json_encode($output);
+    }
+
+    function get_default_songs(){
+        
+    }
+
+    function add_default_song(){
+        $url = $_POST["url_song"];
+        $video_id = explode("?v=", $url)[1];
+        $id = explode("&", $video_id)[0];
+        $test = explode('<title>', file_get_contents("https://www.youtube.com/watch?v=VideoIDHERE"))[1];
+        print_r($test);
+
+        $title = explode('</title>', $test)[0];
+        print_r($title);
+
+        $request = "INSERT INTO default_songs (url, title) VALUES ('" . $url . "', '" . $title . "')";
+        $GLOBALS['conn']->query($request);
     }
 ?>
