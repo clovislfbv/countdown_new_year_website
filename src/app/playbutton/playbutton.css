@@ -1,0 +1,131 @@
+.button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.play-pause-button {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.play-pause-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.play-pause-button:active {
+  transform: scale(0.95);
+}
+
+/* Play icon (default state - when paused) */
+.play-pause-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-40%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid white;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  transition: all 0.3s ease;
+}
+
+/* Pause icon (when playing state) */
+.play-pause-button.playing::before {
+  width: 3px;
+  height: 18px;
+  background: white;
+  border-radius: 2px;
+  box-shadow: none;
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+  transform: translate(-200%, -50%);
+}
+
+.play-pause-button.playing::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 18px;
+  background: white;
+  border-radius: 2px;
+  transform: translate(100%, -50%);
+}
+
+/* Alternative design with Font Awesome icons */
+.play-pause-button-alt {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.play-pause-button-alt:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.play-pause-button-alt:active {
+  transform: scale(0.95);
+}
+
+/* Text-based version */
+.play-pause-button-text {
+  position: relative;
+  width: 80px;
+  height: 40px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.play-pause-button-text:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.play-pause-button-text:active {
+  transform: translateY(0);
+}
+
+/* Status display */
+.status {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}

@@ -1,0 +1,23 @@
+<!-- Option 1: Pure CSS with geometric shapes -->
+ <div class="button">
+    <button class="play-pause-button" [class.playing]="isPlaying" (click)="togglePlay()">
+</button>
+ </div>
+
+<!-- Option 2: With Font Awesome icons (uncomment if you have FontAwesome) -->
+<!-- 
+<button class="play-pause-button-alt" (click)="togglePlay()">
+  <i class="fas" [class.fa-pause]="!isPlaying" [class.fa-play]="isPlaying"></i>
+</button>
+-->
+
+<!-- Option 3: Text-based button -->
+<!-- 
+<button class="play-pause-button-text" (click)="togglePlay()">
+  {{ isPlaying ? 'PLAY' : 'PAUSE' }}
+</button>
+-->
+
+<div class="status">
+  Status: {{ isPlaying ? 'Playing' : 'Paused' }}
+</div>
