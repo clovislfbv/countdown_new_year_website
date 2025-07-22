@@ -15,17 +15,19 @@ try:
     yt = YouTube(url) 
     
     # Create expected filename
-    base_filename = yt.title.lower().replace(' ', '_')
+    base_filename = yt.title.lower().replace('- ', '').replace(' ', '_')
     # Remove special characters that might cause issues
-    base_filename = re.sub(r'[^\w\-_\.]', '', base_filename)
-    expected_file = f"/var/www/html/downloads/{base_filename}.mp3"
-    
+    base_with_underscores = re.sub(r'[^\w_\/\.]', '', base_filename)
+    expected_file = f"/var/www/html/downloads/{base_with_underscores}.mp3"
+
     # Check if file already exists
     if os.path.exists(expected_file):
+        # Use relative path for original_file (use the same cleaned filename)
+        relative_path = f"downloads/{base_with_underscores}.mp3"
         response = {
             "status": "success",
             "title": yt.title,
-            "original_file": expected_file,
+            "original_file": relative_path,
             "final_file": expected_file,
             "url": url,
             "already_downloaded": True
@@ -46,19 +48,22 @@ try:
         
         # save the file with proper naming
         base, ext = os.path.splitext(out_file)
-        base_with_underscores = base.lower().replace(' ', '_')
-        # Remove special characters
-        #base_with_underscores = re.sub(r'[^\w\-_\.]', '', base_with_underscores)
+        # Keep the full destination path and convert to lowercase with underscores
+        base_with_underscores = base.lower().replace('- ', '').replace(' ', '_')
+        # Remove special characters (no dashes allowed)
+        base_with_underscores = re.sub(r'[^\w_\/\.]', '', base_with_underscores)
         new_file = base_with_underscores + '.mp3'
         
         # Move/rename the file using shutil.move (works across filesystems)
-        # shutil.move(out_file, new_file)
+        shutil.move(out_file, new_file)
         
         # Return JSON response
+        # Use relative path for original_file (now pointing to the renamed file)
+        relative_original = os.path.relpath(new_file, '/var/www/html')
         response = {
             "status": "success",
             "title": yt.title,
-            "original_file": out_file,
+            "original_file": relative_original,
             "final_file": new_file,
             "url": url,
             "already_downloaded": False

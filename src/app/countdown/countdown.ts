@@ -15,6 +15,7 @@ export class Countdown implements OnInit {
   seconds: number = 0;
   song_path : string = '';
   song_url: string = '';
+  song_title: string = '';
 
   constructor(private apiCall: ApiCallService, private sanitizer: DomSanitizer) {
     this.calculateCountdown();
@@ -29,6 +30,7 @@ export class Countdown implements OnInit {
           const songData = JSON.parse(response[0]);
           this.song_path = songData.final_file;
           this.song_url = songData.url;
+          this.song_title = songData.title;
         }
       },
       error: (error) => {
