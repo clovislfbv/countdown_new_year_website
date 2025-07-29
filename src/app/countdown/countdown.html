@@ -1,3 +1,5 @@
 <p>Il reste {{days}} jours {{hours}} heures {{minutes}} minutes {{seconds}} secondes avant le Nouvel An.</p>
 
 <p>La chanson du Nouvel An est : <a [href]="song_url" target="_blank">{{ song_title }}</a></p>
+
+<qrcode [qrdata]="qrUrl" [width]="256" [errorCorrectionLevel]="'M'"></qrcode>

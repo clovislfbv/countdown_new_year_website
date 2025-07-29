@@ -21,8 +21,8 @@
                 get_song();
                 break;
             
-            case "get_default_songs":
-                get_default_songs();
+            case "get_default_song":
+                get_default_song();
                 break;
 
             case "add_default_song":
@@ -31,6 +31,14 @@
 
             case "get_available_tracks":
                 get_available_tracks();
+                break;
+            
+            case "search_songs":
+                search_songs();
+                break;
+            
+            case "spo2ytb":
+                spo2ytb();
                 break;
         }
     }
@@ -51,7 +59,7 @@
     function get_song(){
         $output=null;
         $retval=null;
-        exec('python3 dl_youtube.py https://www.youtube.com/watch\?v\=dQw4w9WgXcQ\&ab_channel\=RickAstley', $output, $retval);
+        exec('python3 dl_youtube.py ' . $_POST["url"], $output, $retval);
         $output_json = json_encode($output);
         echo $output_json;
     }
@@ -73,8 +81,12 @@
         echo json_encode($output);
     }
 
-    function get_default_songs(){
-        
+    function get_default_song(){
+        $output=null;
+        $retval=null;
+        exec('python3 dl_youtube.py https://www.youtube.com/watch\?v\=dQw4w9WgXcQ\&ab_channel\=RickAstley', $output, $retval);
+        $output_json = json_encode($output);
+        echo $output_json;
     }
 
     function add_default_song(){
@@ -89,5 +101,40 @@
 
         $request = "INSERT INTO default_songs (url, title) VALUES ('" . $url . "', '" . $title . "')";
         $GLOBALS['conn']->query($request);
+    }
+
+    function search_songs() {
+        $output=null;
+        $retval=null;
+        exec('python3 spotify.py ' . escapeshellarg($_POST["query"]), $output, $retval);
+        $output_json = json_encode($output);
+        echo $output_json;
+    }
+
+    function spo2ytb() {
+        $spo_url = $_POST["spo_url"];
+        $api_url = "https://ytm2spotify.com/convert?";
+        $api_url .= "url=" . urlencode($spo_url);
+        $api_url .= "&to_service=youtube_ytm";
+        
+        // Utiliser cURL pour faire l'appel API
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($http_code === 200 && $response !== false) {
+            header('Content-Type: application/json');
+            echo $response;
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to fetch data from external API']);
+        }
     }
 ?>

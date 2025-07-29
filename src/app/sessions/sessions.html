@@ -1,0 +1,30 @@
+<div class="components">
+    <div class="search-container">
+        <input id="search_songs" type="text" (keyup)="onSearch($event)" placeholder="Search for songs..." />
+        
+        <!-- Loading indicator -->
+        <div *ngIf="isSearching" class="loading">
+            <div class="spinner"></div>
+            <span>Searching...</span>
+        </div>
+        
+        <!-- Search results -->
+        <div *ngIf="!isSearching && searchResults.length > 0" class="results-container">
+            <div *ngFor="let song of searchResults" class="song-item" (click)="selectSong(song)">
+                <div class="song-info">
+                    <div class="song-title">{{ song.title || song.name || 'Unknown Title' }}</div>
+                    <div class="song-artist">{{ song.artist || song.channel || 'Unknown Artist' }}</div>
+                    <div class="song-duration" *ngIf="song.duration">{{ song.duration }}</div>
+                </div>
+                <div class="song-thumbnail" *ngIf="song.album_image || song.thumbnail">
+                    <img [src]="song.album_image || song.thumbnail" alt="Album cover" />
+                </div>
+            </div>
+        </div>
+        
+        <!-- No results message -->
+        <div *ngIf="!isSearching && searchResults.length === 0 && searchResults !== null" class="no-results">
+            <p>No songs found. Try a different search term.</p>
+        </div>
+    </div>
+</div>

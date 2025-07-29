@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ApiCallService } from '../api-call.service';
+import { QRCodeComponent } from 'angularx-qrcode';
+import { host, port } from '../../environments/environment';
 
 @Component({
   selector: 'app-countdown',
-  imports: [],
+  imports: [QRCodeComponent],
   templateUrl: './countdown.html',
   styleUrl: './countdown.css'
 })
@@ -16,6 +18,7 @@ export class Countdown implements OnInit {
   song_path : string = '';
   song_url: string = '';
   song_title: string = '';
+  qrUrl: string = `http://${host}:${port}/test`;
 
   constructor(private apiCall: ApiCallService, private sanitizer: DomSanitizer) {
     this.calculateCountdown();
@@ -23,7 +26,7 @@ export class Countdown implements OnInit {
   }
 
   ngOnInit() {
-    this.apiCall.getSong().subscribe({
+    this.apiCall.getDefaultSong().subscribe({
       next: (response) => {
         console.log('Response:', response);
         if (response && response.length > 0) {

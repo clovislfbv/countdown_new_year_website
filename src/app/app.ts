@@ -1,10 +1,9 @@
 import { Component, signal } from '@angular/core';
-import { Countdown } from "./countdown/countdown";
-import { Songbar } from './songbar/songbar';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [Countdown, Songbar],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

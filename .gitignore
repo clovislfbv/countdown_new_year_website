@@ -42,5 +42,7 @@ testem.log
 Thumbs.db
 
 .env
-src/environments/environment.ts
+src/environments/*
 src/app/backend/downloads/*
+src/app/backend/conn.php
+.cache
