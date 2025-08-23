@@ -1,6 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiCallService } from '../api-call.service';
+import { SongSelectionService } from '../song-selection.service';
 
 @Component({
   selector: 'app-sessions',
@@ -13,7 +14,7 @@ export class Sessions implements OnDestroy {
   isSearching: boolean = false;
   searchTimeout: any;
 
-  constructor(private apiCall: ApiCallService) {}
+  constructor(private apiCall: ApiCallService, private songSelection: SongSelectionService) {}
 
   onSearch(event: KeyboardEvent) {
     const query = (event.target as HTMLInputElement).value.trim();
@@ -84,25 +85,43 @@ export class Sessions implements OnDestroy {
 
   selectSong(song: any) {
     console.log('Selected song:', song);
+    
+    // Informer le service qu'une chanson a été sélectionnée
+    this.songSelection.setSelectedSong({
+      title: song.name || song.title || 'Unknown Title',
+      artist: song.artists?.[0]?.name || song.artist || 'Unknown Artist',
+      url: song.external_urls?.spotify || song.url || ''
+    });
+    
+    // Commencer le téléchargement
+    this.songSelection.setDownloadStatus('downloading');
+    
     let ytbUrl = "";
     
-    this.apiCall.spo2ytburl(song.url).subscribe({
+    this.apiCall.spo2ytburl(song.external_urls?.spotify || song.url).subscribe({
       next: (response) => {
         ytbUrl = response.results[0].url;
-
         console.log('YouTube URL:', ytbUrl);
 
         this.apiCall.getSong(ytbUrl).subscribe({
           next: (response) => {
-            console.log('Response:', response);
+            console.log('Download Response:', response);
+            if (response && response.length > 0) {
+              const songData = JSON.parse(response[0]);
+              // Mettre à jour le service avec le chemin du fichier
+              this.songSelection.updateSongFilePath(songData.original_file);
+              this.songSelection.setDownloadStatus('downloaded');
+            }
           },
           error: (error) => {
-            console.error('Error:', error);
+            console.error('Error downloading song:', error);
+            this.songSelection.setDownloadStatus('error');
           }
         });
       },
       error: (error) => {
-        console.error('Error:', error);
+        console.error('Error converting Spotify to YouTube:', error);
+        this.songSelection.setDownloadStatus('error');
       }
     });
   }

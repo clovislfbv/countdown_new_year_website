@@ -6,7 +6,6 @@ RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
 
 WORKDIR /var/www/html/
 
-# Fix permissions for www-data user
 RUN chown -R www-data:www-data /var/www/html/
 RUN chmod -R 755 /var/www/html/
 

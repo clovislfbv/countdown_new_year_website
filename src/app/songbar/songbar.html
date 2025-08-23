@@ -1,5 +1,19 @@
 <div class="components">
+    <div class="song-info" *ngIf="selectedSong">
+        <div class="song-title">{{ selectedSong.title }}</div>
+        <div class="song-artist">{{ selectedSong.artist }}</div>
+        <div class="download-status">
+            <span *ngIf="downloadStatus === 'downloading'">Downloading...</span>
+            <span *ngIf="downloadStatus === 'downloaded'" class="status-success">Ready to play</span>
+            <span *ngIf="downloadStatus === 'error'" class="status-error">Download failed</span>
+        </div>
+    </div>
+    
     <div class="playbutton">
         <app-playbutton></app-playbutton>
+    </div>
+    
+    <div class="no-song" *ngIf="!selectedSong">
+        <span>No song selected</span>
     </div>
 </div>
