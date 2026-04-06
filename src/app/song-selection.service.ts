@@ -5,6 +5,7 @@ export interface SelectedSong {
   title: string;
   artist: string;
   url: string;
+  thumbnail?: string;
   filePath?: string;
   isDownloaded?: boolean;
 }

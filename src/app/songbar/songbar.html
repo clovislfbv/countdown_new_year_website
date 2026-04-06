@@ -1,19 +1,48 @@
 <div class="components">
-    <div class="song-info" *ngIf="selectedSong">
-        <div class="song-title">{{ selectedSong.title }}</div>
-        <div class="song-artist">{{ selectedSong.artist }}</div>
-        <div class="download-status">
-            <span *ngIf="downloadStatus === 'downloading'">Downloading...</span>
-            <span *ngIf="downloadStatus === 'downloaded'" class="status-success">Ready to play</span>
-            <span *ngIf="downloadStatus === 'error'" class="status-error">Download failed</span>
+    <div class="player-shell">
+        <div class="track-info" *ngIf="selectedSong; else emptyState">
+            <div class="track-artwork" *ngIf="selectedSong.thumbnail">
+                <img [src]="selectedSong.thumbnail" [alt]="selectedSong.title" />
+            </div>
+
+            <div class="track-meta">
+                <div class="track-label">Now playing</div>
+                <div class="track-title">{{ selectedSong.title }}</div>
+                <div class="track-artist">{{ selectedSong.artist }}</div>
+            </div>
         </div>
-    </div>
-    
-    <div class="playbutton">
-        <app-playbutton></app-playbutton>
-    </div>
-    
-    <div class="no-song" *ngIf="!selectedSong">
-        <span>No song selected</span>
+
+        <ng-template #emptyState>
+            <div class="track-info empty">
+                <div class="track-meta">
+                    <div class="track-label">Now playing</div>
+                    <div class="track-title">No song selected</div>
+                    <div class="track-artist">Pick a track from the sessions page</div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="transport-row">
+            <button type="button" class="transport-button" (click)="previousTrack()" aria-label="Previous track">
+                <span class="transport-icon transport-icon-prev"></span>
+            </button>
+
+            <app-playbutton></app-playbutton>
+
+            <button type="button" class="transport-button" (click)="skipCurrent()" aria-label="Skip track">
+                <span class="transport-icon transport-icon-next"></span>
+            </button>
+        </div>
+
+        <div class="progress-area">
+            <div class="progress-track" (click)="seekFromClick($event)">
+                <div class="progress-fill" [style.width.%]="progressPercent"></div>
+            </div>
+
+            <div class="progress-times">
+                <span>{{ formatTime(currentTime) }}</span>
+                <span>{{ formatTime(duration) }}</span>
+            </div>
+        </div>
     </div>
 </div>

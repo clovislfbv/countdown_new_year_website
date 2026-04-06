@@ -26,6 +26,7 @@ export class App implements OnInit, OnDestroy {
         title: song.title || 'Unknown Title',
         artist: 'Requested from session',
         url: song.url || '',
+          thumbnail: song.thumbnail || '',
         filePath: song.original_file || undefined,
         isDownloaded: true
       });

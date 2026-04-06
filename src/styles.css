@@ -1,8 +1,35 @@
-/* You can add global styles to this file, and also import other style files */
-body {
+/* Global app theme */
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
-  height: 98vh;
-  width: 98vw;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: #f5f7ff;
+  background:
+    radial-gradient(circle at top left, rgba(118, 75, 162, 0.45), transparent 35%),
+    radial-gradient(circle at top right, rgba(102, 126, 234, 0.35), transparent 30%),
+    linear-gradient(135deg, #0b1020 0%, #11162b 50%, #0c1327 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
 }

@@ -1,5 +1,7 @@
-<p>Il reste {{days}} jours {{hours}} heures {{minutes}} minutes {{seconds}} secondes avant le Nouvel An.</p>
-
-<p>La chanson du Nouvel An est : <a [href]="song_url" target="_blank">{{ song_title }}</a></p>
-
-<qrcode [qrdata]="qrUrl" [width]="256" [errorCorrectionLevel]="'M'"></qrcode>
+<div class="countdown-shell">
+	<span class="countdown-label">Time remaining</span>
+	<div class="countdown-value">
+		{{ days }}d {{ hours }}h {{ minutes }}m {{ seconds }}s
+	</div>
+	<div class="countdown-subtitle">until the new year</div>
+</div>

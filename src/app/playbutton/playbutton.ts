@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AudioService } from '../audio-service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-playbutton',
@@ -7,21 +8,23 @@ import { AudioService } from '../audio-service';
   templateUrl: './playbutton.html',
   styleUrl: './playbutton.css'
 })
-export class Playbutton {
-  isPlaying: boolean = false; // Default state is paused (shows pause icon)
+export class Playbutton implements OnInit, OnDestroy {
+  isPlaying: boolean = false;
+  private subscription: Subscription | null = null;
 
   constructor(private audioService: AudioService) {}
 
+  ngOnInit() {
+    this.subscription = this.audioService.isPlaying$.subscribe((isPlaying) => {
+      this.isPlaying = isPlaying;
+    });
+  }
+
   togglePlay() {
-    this.isPlaying = !this.isPlaying;
-    console.log('Button clicked! Is playing:', this.isPlaying);
-    
-    // Here you can add your audio control logic
-    // For example:
-    if (this.isPlaying) {
-      this.audioService.play();
-    } else {
-      this.audioService.pause();
-    }
+    this.audioService.togglePlay();
+  }
+
+  ngOnDestroy() {
+    this.subscription?.unsubscribe();
   }
 }

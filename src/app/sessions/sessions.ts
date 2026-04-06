@@ -133,17 +133,17 @@ export class Sessions implements OnDestroy {
     return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|open\.spotify\.com|spotify:)/i.test(value);
   }
 
-  private handleDirectLink(link: string) {
+  private handleDirectLink(link: string, previewSong?: { title?: string; artist?: string; url?: string; thumbnail?: string; }) {
     this.isSearching = true;
     this.searchResults = [];
 
     if (this.isSpotifyLink(link)) {
-      this.convertSpotifyLink(link);
+      this.convertSpotifyLink(link, previewSong);
       return;
     }
 
     if (this.isYouTubeLink(link)) {
-      this.downloadFromYouTube(link);
+      this.downloadFromYouTube(link, previewSong);
       return;
     }
 
@@ -158,7 +158,13 @@ export class Sessions implements OnDestroy {
     return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)/i.test(value);
   }
 
-  private convertSpotifyLink(link: string) {
+  private convertSpotifyLink(link: string, previewSong?: { title?: string; artist?: string; url?: string; thumbnail?: string; }) {
+    this.songSelection.setSelectedSong({
+      title: 'Loading...',
+      artist: 'Resolving link...',
+      url: link,
+      thumbnail: previewSong?.thumbnail || ''
+    });
     this.songSelection.setDownloadStatus('downloading');
 
     this.apiCall.spo2ytburl(link).subscribe({
@@ -170,7 +176,12 @@ export class Sessions implements OnDestroy {
           return;
         }
 
-        this.downloadFromYouTube(youtubeUrl);
+        this.downloadFromYouTube(youtubeUrl, {
+          title: 'Loading...',
+          artist: 'Resolving link...',
+          url: link,
+          thumbnail: previewSong?.thumbnail || ''
+        });
       },
       error: (error) => {
         console.error('Error converting Spotify link:', error);
@@ -180,11 +191,12 @@ export class Sessions implements OnDestroy {
     });
   }
 
-  private downloadFromYouTube(youtubeUrl: string) {
+  private downloadFromYouTube(youtubeUrl: string, previewSong?: { title?: string; artist?: string; url?: string; thumbnail?: string; }) {
     this.songSelection.setSelectedSong({
-      title: 'Loading...',
-      artist: 'Resolving link...',
-      url: youtubeUrl
+      title: previewSong?.title || 'Loading...',
+      artist: previewSong?.artist || 'Resolving link...',
+      url: previewSong?.url || youtubeUrl,
+      thumbnail: previewSong?.thumbnail || ''
     });
     this.songSelection.setDownloadStatus('downloading');
 
@@ -197,6 +209,7 @@ export class Sessions implements OnDestroy {
             title: songData.title || 'Unknown Title',
             artist: 'Imported from link',
             url: songData.url || youtubeUrl,
+            thumbnail: songData.thumbnail || previewSong?.thumbnail || '',
             filePath: songData.original_file,
             isDownloaded: true
           });
@@ -267,7 +280,7 @@ export class Sessions implements OnDestroy {
     console.log('Selected song:', song);
 
     if (song?.kind === 'spotify' || song?.kind === 'youtube') {
-      this.handleDirectLink(song.value || song.url || '');
+      this.handleDirectLink(song.value || song.url || '', song);
       return;
     }
     
@@ -275,7 +288,8 @@ export class Sessions implements OnDestroy {
     this.songSelection.setSelectedSong({
       title: song.name || song.title || 'Unknown Title',
       artist: song.artists?.[0]?.name || song.artist || 'Unknown Artist',
-      url: song.external_urls?.spotify || song.url || ''
+      url: song.external_urls?.spotify || song.url || '',
+      thumbnail: song.album_image || song.thumbnail || ''
     });
     
     // Commencer le téléchargement
@@ -294,6 +308,12 @@ export class Sessions implements OnDestroy {
             if (response && response.length > 0) {
               const songData = JSON.parse(response[0]);
               // Mettre à jour le service avec le chemin du fichier
+              this.songSelection.setSelectedSong({
+                title: songData.title || song.name || song.title || 'Unknown Title',
+                artist: song.artists?.[0]?.name || song.artist || 'Unknown Artist',
+                url: songData.url || ytbUrl,
+                thumbnail: songData.thumbnail || song.album_image || song.thumbnail || ''
+              });
               this.songSelection.updateSongFilePath(songData.original_file);
               this.songSelection.setDownloadStatus('downloaded');
             }

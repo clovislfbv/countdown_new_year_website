@@ -30,6 +30,7 @@ try:
             "original_file": relative_path,
             "final_file": expected_file,
             "url": url,
+            "thumbnail": yt.thumbnail_url,
             "already_downloaded": True
         }
         print(json.dumps(response))
@@ -66,6 +67,7 @@ try:
             "original_file": relative_original,
             "final_file": new_file,
             "url": url,
+            "thumbnail": yt.thumbnail_url,
             "already_downloaded": False
         }
         print(json.dumps(response))

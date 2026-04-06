@@ -82,6 +82,7 @@
             'data' => [
                 'title' => $song_data['title'] ?? '',
                 'url' => $song_data['url'] ?? '',
+                'thumbnail' => $song_data['thumbnail'] ?? '',
                 'original_file' => $song_data['original_file'] ?? '',
                 'final_file' => $song_data['final_file'] ?? '',
                 'already_downloaded' => $song_data['already_downloaded'] ?? false,

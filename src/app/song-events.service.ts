@@ -7,6 +7,7 @@ export interface SongRequestedEvent {
   data: {
     title: string;
     url: string;
+    thumbnail: string;
     original_file: string;
     final_file: string;
     already_downloaded: boolean;

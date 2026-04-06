@@ -1,7 +1,21 @@
-<div class="content">
-  <app-countdown></app-countdown>
-</div>
+<main class="home-layout">
+  <section class="countdown-wrap">
+    <app-countdown></app-countdown>
+  </section>
 
-<div class="songbar">
-  <app-songbar></app-songbar>
-</div>
+  <section class="qr-card">
+    <div class="qr-copy">
+      <span class="qr-label">Add music</span>
+      <h2>Scan the QR code</h2>
+      <p>It opens the sessions page so guests can add songs from their phone.</p>
+    </div>
+
+    <div class="qr-code">
+      <qrcode [qrdata]="qrUrl" [width]="160" [errorCorrectionLevel]="'M'"></qrcode>
+    </div>
+  </section>
+
+  <section class="songbar-card">
+    <app-songbar></app-songbar>
+  </section>
+</main>
