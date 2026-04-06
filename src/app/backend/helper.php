@@ -2,6 +2,8 @@
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
+
+    $port = getenv('ws_port');
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         exit(0);
@@ -56,10 +58,52 @@
         unlink("../html/$page_name.html");
     }
 
+    function ensure_song_ws_server_running() {
+        $socket = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.2);
+        if ($socket !== false) {
+            fclose($socket);
+            return;
+        }
+
+        // Start once in background when first event needs to be emitted.
+        exec('nohup python3 ws_song_events.py > /tmp/ws_song_events.log 2>&1 &');
+        usleep(200000);
+    }
+
+    function publish_song_requested_event($song_data) {
+        if (!is_array($song_data)) {
+            return;
+        }
+
+        ensure_song_ws_server_running();
+
+        $payload = [
+            'type' => 'song_requested',
+            'data' => [
+                'title' => $song_data['title'] ?? '',
+                'url' => $song_data['url'] ?? '',
+                'original_file' => $song_data['original_file'] ?? '',
+                'final_file' => $song_data['final_file'] ?? '',
+                'already_downloaded' => $song_data['already_downloaded'] ?? false,
+                'requested_at' => gmdate('c'),
+            ]
+        ];
+
+        exec('python3 ws_publish.py ' . escapeshellarg(json_encode($payload)) . ' > /dev/null 2>&1 &');
+    }
+
     function get_song(){
         $output=null;
         $retval=null;
-        exec('python3 dl_youtube.py ' . $_POST["url"], $output, $retval);
+        exec('python3 dl_youtube.py ' . escapeshellarg($_POST["url"]), $output, $retval);
+
+        if (!empty($output) && isset($output[0])) {
+            $song_data = json_decode($output[0], true);
+            if (is_array($song_data) && (($song_data['status'] ?? '') === 'success')) {
+                publish_song_requested_event($song_data);
+            }
+        }
+
         $output_json = json_encode($output);
         echo $output_json;
     }
@@ -111,30 +155,60 @@
         echo $output_json;
     }
 
+    function normalize_spotify_input($spotify_input) {
+        $spotify_input = trim((string)$spotify_input);
+
+        // Convert URI format like spotify:track:ID into open.spotify.com URL.
+        if (strpos($spotify_input, 'spotify:') === 0) {
+            $parts = explode(':', $spotify_input);
+            if (count($parts) === 3) {
+                $entity_type = $parts[1];
+                $entity_id = $parts[2];
+                return "https://open.spotify.com/{$entity_type}/{$entity_id}";
+            }
+        }
+
+        return $spotify_input;
+    }
+
+    function spotify_to_youtube_url($spotify_input) {
+        $spo_url = normalize_spotify_input($spotify_input);
+        if ($spo_url === '') {
+            return null;
+        }
+
+        $output = null;
+        $retval = null;
+        exec('python3 spo2ytb.py ' . escapeshellarg($spo_url), $output, $retval);
+
+        if (empty($output)) {
+            return null;
+        }
+
+        $decoded = json_decode(implode("\n", $output), true);
+        if (!is_array($decoded) || ($decoded['status'] ?? 'error') !== 'success') {
+            return null;
+        }
+
+        return $decoded['youtube_url'] ?? null;
+    }
+
     function spo2ytb() {
-        $spo_url = $_POST["spo_url"];
-        $api_url = "https://ytm2spotify.com/convert?";
-        $api_url .= "url=" . urlencode($spo_url);
-        $api_url .= "&to_service=youtube_ytm";
-        
-        // Utiliser cURL pour faire l'appel API
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $api_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-        
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($http_code === 200 && $response !== false) {
-            header('Content-Type: application/json');
-            echo $response;
+        $spo_url = $_POST["spo_url"] ?? '';
+        $youtube_url = spotify_to_youtube_url($spo_url);
+
+        header('Content-Type: application/json');
+        if ($youtube_url !== null) {
+            echo json_encode([
+                'results' => [
+                    [
+                        'url' => $youtube_url,
+                    ]
+                ]
+            ]);
         } else {
             http_response_code(500);
-            echo json_encode(['error' => 'Failed to fetch data from external API']);
+            echo json_encode(['error' => 'Failed to convert Spotify URL to YouTube URL']);
         }
     }
 ?>

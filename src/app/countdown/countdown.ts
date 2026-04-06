@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ApiCallService } from '../api-call.service';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { host, port } from '../../environments/environment';
+import { SongSelectionService } from '../song-selection.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-countdown',
@@ -10,7 +12,7 @@ import { host, port } from '../../environments/environment';
   templateUrl: './countdown.html',
   styleUrl: './countdown.css'
 })
-export class Countdown implements OnInit {
+export class Countdown implements OnInit, OnDestroy {
   days: number = 0;
   hours: number = 0;
   minutes: number = 0;
@@ -19,13 +21,27 @@ export class Countdown implements OnInit {
   song_url: string = '';
   song_title: string = '';
   qrUrl: string = `http://${host}:${port}/test`;
+  private songSubscription: Subscription | null = null;
 
-  constructor(private apiCall: ApiCallService, private sanitizer: DomSanitizer) {
+  constructor(
+    private apiCall: ApiCallService,
+    private sanitizer: DomSanitizer,
+    private songSelection: SongSelectionService
+  ) {
     this.calculateCountdown();
     setInterval(() => this.calculateCountdown(), 100);
   }
 
   ngOnInit() {
+    this.songSubscription = this.songSelection.selectedSong$.subscribe((song) => {
+      if (!song) {
+        return;
+      }
+
+      this.song_title = song.title || this.song_title;
+      this.song_url = song.url || this.song_url;
+    });
+
     this.apiCall.getDefaultSong().subscribe({
       next: (response) => {
         console.log('Response:', response);
@@ -40,6 +56,10 @@ export class Countdown implements OnInit {
         console.error('Error:', error);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.songSubscription?.unsubscribe();
   }
 
   private calculateCountdown() {

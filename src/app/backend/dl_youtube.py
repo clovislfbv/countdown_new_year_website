@@ -35,7 +35,7 @@ try:
         print(json.dumps(response))
     else:
         # extract only audio 
-        video = yt.streams.filter(only_audio=True).first() 
+        video = yt.streams.filter(only_audio=True).order_by('abr').desc().first()
         
         # Use downloads directory which is accessible via HTTP
         destination = '/var/www/html/downloads'

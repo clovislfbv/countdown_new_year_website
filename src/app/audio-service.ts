@@ -1,6 +1,7 @@
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { ApiCallService } from './api-call.service';
 import { apiUrl } from '../environments/environment';
+import { SongSelectionService } from './song-selection.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,23 @@ export class AudioService {
   song_path: string = '';
   audio: HTMLAudioElement | null = null;
 
-  constructor(private apiCall: ApiCallService) {}
+  constructor(private apiCall: ApiCallService, private songSelection: SongSelectionService) {
+    this.songSelection.selectedSong$.subscribe((song) => {
+      if (!song?.filePath) {
+        return;
+      }
+
+      this.song_path = `${apiUrl}/${song.filePath}`;
+
+      if (this.audio && !this.audio.paused) {
+        this.audio.src = this.song_path;
+        this.audio.load();
+        this.audio.play().catch((error) => {
+          console.error('Error auto-switching audio:', error);
+        });
+      }
+    });
+  }
 
   play() {
     if (!this.song_path || !this.audio) {

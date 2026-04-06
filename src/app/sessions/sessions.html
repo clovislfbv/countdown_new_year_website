@@ -1,6 +1,6 @@
 <div class="components">
     <div class="search-container">
-        <input id="search_songs" type="text" (keyup)="onSearch($event)" placeholder="Search for songs..." />
+        <input id="search_songs" type="text" (input)="onSearch($event)" placeholder="Search for songs or paste a YouTube/Spotify link..." />
         
         <!-- Loading indicator -->
         <div *ngIf="isSearching" class="loading">

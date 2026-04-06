@@ -6,6 +6,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${port}:${port2}"
+      - "${ws_port}:${ws_port2}"
+    environment:
+      - ws_port=${ws_port}
     volumes:
       - ./src/app/backend:/var/www/html
       - ./000-default.conf:/etc/apache2/conf.d/000-default.conf
