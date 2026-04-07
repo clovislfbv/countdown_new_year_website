@@ -12,3 +12,17 @@ services:
     volumes:
       - ./src/app/backend:/var/www/html
       - ./000-default.conf:/etc/apache2/conf.d/000-default.conf
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /workspace
+    command: sh -lc "npm install --legacy-peer-deps && npm start -- --host 0.0.0.0 --port 4200"
+    depends_on:
+      - web
+    ports:
+      - "4200:4200"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./:/workspace
+      - /workspace/node_modules

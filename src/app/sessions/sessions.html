@@ -1,6 +1,8 @@
 <div class="components">
     <div class="search-container">
-        <input id="search_songs" type="text" (input)="onSearch($event)" placeholder="Search for songs or paste a YouTube/Spotify link..." />
+        <div class="search-bar-wrap">
+            <input id="search_songs" type="text" (input)="onSearch($event)" placeholder="Search for songs or paste a YouTube/Spotify link..." />
+        </div>
         
         <!-- Loading indicator -->
         <div *ngIf="isSearching" class="loading">
@@ -9,15 +11,36 @@
         </div>
         
         <!-- Search results -->
-        <div *ngIf="!isSearching && searchResults.length > 0" class="results-container">
-            <div *ngFor="let song of searchResults" class="song-item" (click)="selectSong(song)">
-                <div class="song-info">
-                    <div class="song-title">{{ song.title || song.name || 'Unknown Title' }}</div>
-                    <div class="song-artist">{{ song.artist || song.channel || 'Unknown Artist' }}</div>
-                    <div class="song-duration" *ngIf="song.duration">{{ song.duration }}</div>
+        <div *ngIf="searchResults.length > 0" class="results-container">
+            <div *ngIf="spotifySearchResults.length > 0" class="results-group">
+                <h4 class="results-title spotify-title">
+                    Resultats obtenus sur <span class="platform-pill">Spotify</span>
+                </h4>
+                <div *ngFor="let song of spotifySearchResults" class="song-item" (click)="selectSong(song)">
+                    <div class="song-info">
+                        <div class="song-title">{{ song.title || song.name || 'Unknown Title' }}</div>
+                        <div class="song-artist">{{ song.artist || song.channel || 'Unknown Artist' }}</div>
+                        <div class="song-duration" *ngIf="song.duration">{{ song.duration }}</div>
+                    </div>
+                    <div class="song-thumbnail" *ngIf="song.album_image || song.thumbnail">
+                        <img [src]="song.album_image || song.thumbnail" alt="Album cover" />
+                    </div>
                 </div>
-                <div class="song-thumbnail" *ngIf="song.album_image || song.thumbnail">
-                    <img [src]="song.album_image || song.thumbnail" alt="Album cover" />
+            </div>
+
+            <div *ngIf="youtubeSearchResults.length > 0" class="results-group">
+                <h4 class="results-title youtube-title">
+                    Resultats obtenus sur <span class="platform-pill">YouTube</span>
+                </h4>
+                <div *ngFor="let song of youtubeSearchResults" class="song-item" (click)="selectSong(song)">
+                    <div class="song-info">
+                        <div class="song-title">{{ song.title || song.name || 'Unknown Title' }}</div>
+                        <div class="song-artist">{{ song.artist || song.channel || 'Unknown Artist' }}</div>
+                        <div class="song-duration" *ngIf="song.duration">{{ song.duration }}</div>
+                    </div>
+                    <div class="song-thumbnail" *ngIf="song.album_image || song.thumbnail">
+                        <img [src]="song.album_image || song.thumbnail" alt="Album cover" />
+                    </div>
                 </div>
             </div>
         </div>

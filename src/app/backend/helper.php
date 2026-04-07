@@ -4,6 +4,7 @@
     header('Access-Control-Allow-Headers: Content-Type');
 
     $port = getenv('ws_port');
+    $python_bin = '/opt/venv/bin/python';
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         exit(0);
@@ -38,6 +39,14 @@
             case "search_songs":
                 search_songs();
                 break;
+
+            case "search_spotify_songs":
+                search_spotify_songs();
+                break;
+
+            case "search_youtube_songs":
+                search_youtube_songs();
+                break;
             
             case "spo2ytb":
                 spo2ytb();
@@ -59,14 +68,16 @@
     }
 
     function ensure_song_ws_server_running() {
-        $socket = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.2);
+        global $port;
+        $ws_port = (int)($port ?: 8765);
+        $socket = @fsockopen('127.0.0.1', $ws_port, $errno, $errstr, 0.2);
         if ($socket !== false) {
             fclose($socket);
             return;
         }
 
         // Start once in background when first event needs to be emitted.
-        exec('nohup python3 ws_song_events.py > /tmp/ws_song_events.log 2>&1 &');
+        exec('nohup /opt/venv/bin/python ws_song_events.py >/dev/null 2>&1 &');
         usleep(200000);
     }
 
@@ -90,13 +101,99 @@
             ]
         ];
 
-        exec('python3 ws_publish.py ' . escapeshellarg(json_encode($payload)) . ' > /dev/null 2>&1 &');
+        exec('/opt/venv/bin/python ws_publish.py ' . escapeshellarg(json_encode($payload)) . ' > /dev/null 2>&1 &');
+    }
+
+    function normalize_downloaded_filename($value) {
+        $value = trim((string)$value);
+        $value = preg_replace('/[\\/:*?"<>|]/', '', $value);
+        $value = preg_replace('/\s+/', ' ', $value);
+        return $value;
+    }
+    function build_spotdl_song_data($output, $source_url) {
+        $downloaded_title = '';
+        $youtube_url = '';
+        $already_downloaded = false;
+
+        foreach ($output as $line) {
+            if (!is_string($line)) {
+                continue;
+            }
+
+            // Case 1: Downloaded "Titre": URL
+            if (stripos($line, 'Downloaded') !== false) {
+                // Extract title between quotes
+                if (preg_match('/Downloaded\s+"([^"]+)"/', $line, $matches)) {
+                    $downloaded_title = $matches[1];
+                }
+                // Extract YouTube URL
+                if (preg_match('/https?:\/\/[^\s]+/', $line, $matches)) {
+                    $youtube_url = $matches[0];
+                }
+            }
+
+            // Case 2: Skipping Titre (already downloaded)
+            if (stripos($line, 'Skipping') !== false) {
+                $already_downloaded = true;
+                // Extract title: "Skipping Ninho - PILIER (file already exists) (duplicate)"
+                if (preg_match('/Skipping\s+(.+?)\s*\(/', $line, $matches)) {
+                    $downloaded_title = trim($matches[1]);
+                }
+            }
+
+            if (!$youtube_url && preg_match('/^https?:\/\/.+$/', trim($line))) {
+                $youtube_url = trim($line);
+            }
+        }
+
+        // If no title found, extraction failed
+        if (empty($downloaded_title)) {
+            return [
+                'status' => 'error',
+                'message' => 'Could not extract song title from spotdl output.',
+                'url' => $source_url,
+                'source' => 'spotify',
+            ];
+        }
+
+        // Try to find the file: first in new files, then by title glob
+        $latest_file = '/var/www/html/downloads' . '/' . $downloaded_title . '.mp3';
+
+        $relative_file = preg_replace('#^/var/www/html/#', '', $latest_file);
+
+        return [
+            'status' => 'success',
+            'title' => $downloaded_title,
+            'artist' => 'Imported from Spotify',
+            'url' => $source_url,
+            'thumbnail' => '',
+            'original_file' => $relative_file,
+            'final_file' => $latest_file,
+            'already_downloaded' => $already_downloaded,
+            'source' => 'spotify',
+            'youtube_url' => $youtube_url,
+        ];
     }
 
     function get_song(){
         $output=null;
         $retval=null;
-        exec('python3 dl_youtube.py ' . escapeshellarg($_POST["url"]), $output, $retval);
+        $url = $_POST["url"] ?? '';
+
+        if (is_spotify_url($url)) {
+            $spotdl_env = 'HOME=/tmp/spotdl XDG_CONFIG_HOME=/tmp/spotdl/.config XDG_CACHE_HOME=/tmp/spotdl/.cache';
+            exec($spotdl_env . ' sh -lc ' . escapeshellarg('cd /var/www/html/downloads && /opt/venv/bin/spotdl ' . escapeshellarg($url)), $output, $retval);
+
+            $song_data = build_spotdl_song_data($output, $url);
+            if (is_array($song_data) && ($song_data['status'] ?? '') === 'success') {
+                publish_song_requested_event($song_data);
+            }
+
+            echo json_encode([json_encode($song_data)]);
+            return;
+        } else {
+            exec('/opt/venv/bin/python dl_youtube.py ' . escapeshellarg($url), $output, $retval);
+        }
 
         if (!empty($output) && isset($output[0])) {
             $song_data = json_decode($output[0], true);
@@ -129,9 +226,81 @@
     function get_default_song(){
         $output=null;
         $retval=null;
-        exec('python3 dl_youtube.py https://www.youtube.com/watch\?v\=dQw4w9WgXcQ\&ab_channel\=RickAstley', $output, $retval);
+        exec('/opt/venv/bin/python dl_youtube.py https://www.youtube.com/watch\?v\=dQw4w9WgXcQ\&ab_channel\=RickAstley', $output, $retval);
         $output_json = json_encode($output);
         echo $output_json;
+    }
+
+    function run_python_json_script($script, $argument) {
+        $output = null;
+        $retval = null;
+        exec('/opt/venv/bin/python ' . escapeshellarg($script) . ' ' . escapeshellarg($argument), $output, $retval);
+
+        if (empty($output)) {
+            return null;
+        }
+
+        $decoded = json_decode(implode("\n", $output), true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    function normalize_spotify_search_results($items) {
+        $results = [];
+
+        if (!is_array($items)) {
+            return $results;
+        }
+
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $url = $item['url'] ?? '';
+            $results[] = [
+                'kind' => 'spotify',
+                'source' => 'spotify',
+                'title' => $item['name'] ?? $item['title'] ?? 'Unknown Title',
+                'artist' => $item['artist'] ?? 'Spotify',
+                'album_image' => $item['album_image'] ?? '',
+                'url' => $url,
+                'value' => $url,
+                'id' => $item['id'] ?? '',
+            ];
+        }
+
+        return $results;
+    }
+
+    function normalize_youtube_search_results($items) {
+        $results = [];
+
+        if (!is_array($items)) {
+            return $results;
+        }
+
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $url = $item['url'] ?? '';
+            $results[] = [
+                'kind' => 'youtube',
+                'source' => 'youtube',
+                'title' => $item['title'] ?? $item['name'] ?? 'Unknown Title',
+                'artist' => $item['artist'] ?? $item['channel'] ?? 'YouTube',
+                'thumbnail' => $item['thumbnail'] ?? '',
+                'url' => $url,
+                'value' => $url,
+            ];
+        }
+
+        return $results;
     }
 
     function add_default_song(){
@@ -149,11 +318,80 @@
     }
 
     function search_songs() {
-        $output=null;
-        $retval=null;
-        exec('python3 spotify.py ' . escapeshellarg($_POST["query"]), $output, $retval);
-        $output_json = json_encode($output);
-        echo $output_json;
+        $query = trim($_POST["query"] ?? '');
+        $search_results = [];
+        $sources = [];
+
+        if ($query !== '') {
+            $spotify_results = run_python_json_script('spotify.py', $query);
+            if (is_array($spotify_results) && count($spotify_results) > 0) {
+                $search_results = normalize_spotify_search_results($spotify_results);
+                $sources[] = 'spotify';
+            }
+
+            $youtube_results = run_python_json_script('youtube_search.py', $query);
+            if (is_array($youtube_results) && count($youtube_results) > 0) {
+                $search_results = array_merge($search_results, normalize_youtube_search_results($youtube_results));
+                $sources[] = 'youtube';
+            }
+        }
+
+        if (count($sources) > 1) {
+            $source = 'mixed';
+        } elseif (count($sources) === 1) {
+            $source = $sources[0];
+        } else {
+            $source = 'none';
+        }
+
+        if (empty($search_results)) {
+            $source = 'none';
+        }
+
+        $response = [
+            'source' => $source,
+            'results' => $search_results,
+        ];
+
+        echo json_encode([json_encode($response)]);
+    }
+
+    function search_spotify_songs() {
+        $query = trim($_POST["query"] ?? '');
+        $search_results = [];
+
+        if ($query !== '') {
+            $spotify_results = run_python_json_script('spotify.py', $query);
+            if (is_array($spotify_results) && count($spotify_results) > 0) {
+                $search_results = normalize_spotify_search_results($spotify_results);
+            }
+        }
+
+        $response = [
+            'source' => 'spotify',
+            'results' => $search_results,
+        ];
+
+        echo json_encode([json_encode($response)]);
+    }
+
+    function search_youtube_songs() {
+        $query = trim($_POST["query"] ?? '');
+        $search_results = [];
+
+        if ($query !== '') {
+            $youtube_results = run_python_json_script('youtube_search.py', $query);
+            if (is_array($youtube_results) && count($youtube_results) > 0) {
+                $search_results = normalize_youtube_search_results($youtube_results);
+            }
+        }
+
+        $response = [
+            'source' => 'youtube',
+            'results' => $search_results,
+        ];
+
+        echo json_encode([json_encode($response)]);
     }
 
     function normalize_spotify_input($spotify_input) {
@@ -172,6 +410,11 @@
         return $spotify_input;
     }
 
+    function is_spotify_url($value) {
+        $value = trim((string)$value);
+        return $value !== '' && preg_match('/^(https?:\/\/)?(www\.)?(open\.spotify\.com|spotify:)/i', $value) === 1;
+    }
+
     function spotify_to_youtube_url($spotify_input) {
         $spo_url = normalize_spotify_input($spotify_input);
         if ($spo_url === '') {
@@ -180,7 +423,7 @@
 
         $output = null;
         $retval = null;
-        exec('python3 spo2ytb.py ' . escapeshellarg($spo_url), $output, $retval);
+        exec('/opt/venv/bin/python spo2ytb.py ' . escapeshellarg($spo_url), $output, $retval);
 
         if (empty($output)) {
             return null;

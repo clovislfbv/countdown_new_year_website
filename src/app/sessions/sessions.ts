@@ -14,8 +14,17 @@ export class Sessions implements OnDestroy {
   isSearching: boolean = false;
   searchTimeout: any;
   private directLinkRequestId = 0;
+  private searchRequestId = 0;
 
   constructor(private apiCall: ApiCallService, private songSelection: SongSelectionService) {}
+
+  get spotifySearchResults(): any[] {
+    return this.searchResults.filter((item) => item?.kind === 'spotify');
+  }
+
+  get youtubeSearchResults(): any[] {
+    return this.searchResults.filter((item) => item?.kind === 'youtube');
+  }
 
   onSearch(event: Event) {
     const query = (event.target as HTMLInputElement).value.trim();
@@ -138,7 +147,7 @@ export class Sessions implements OnDestroy {
     this.searchResults = [];
 
     if (this.isSpotifyLink(link)) {
-      this.convertSpotifyLink(link, previewSong);
+      this.downloadFromSpotify(link, previewSong);
       return;
     }
 
@@ -158,33 +167,38 @@ export class Sessions implements OnDestroy {
     return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)/i.test(value);
   }
 
-  private convertSpotifyLink(link: string, previewSong?: { title?: string; artist?: string; url?: string; thumbnail?: string; }) {
+  private downloadFromSpotify(link: string, previewSong?: { title?: string; artist?: string; url?: string; thumbnail?: string; }) {
     this.songSelection.setSelectedSong({
       title: 'Loading...',
-      artist: 'Resolving link...',
+      artist: 'Downloading from Spotify...',
       url: link,
       thumbnail: previewSong?.thumbnail || ''
     });
     this.songSelection.setDownloadStatus('downloading');
 
-    this.apiCall.spo2ytburl(link).subscribe({
+    this.apiCall.getSong(link).subscribe({
       next: (response) => {
-        const youtubeUrl = response.results?.[0]?.url;
-        if (!youtubeUrl) {
+        console.log('Spotify download response:', response);
+        if (response && response.length > 0) {
+          const songData = JSON.parse(response[0]);
+          this.songSelection.setSelectedSong({
+            title: songData.title || 'Unknown Title',
+            artist: songData.artist || previewSong?.artist || 'Imported from Spotify',
+            url: songData.url || link,
+            thumbnail: songData.thumbnail || previewSong?.thumbnail || '',
+            filePath: songData.original_file,
+            isDownloaded: true
+          });
+          this.songSelection.updateSongFilePath(songData.original_file);
+          this.songSelection.setDownloadStatus('downloaded');
+        } else {
           this.songSelection.setDownloadStatus('error');
-          this.isSearching = false;
-          return;
         }
 
-        this.downloadFromYouTube(youtubeUrl, {
-          title: 'Loading...',
-          artist: 'Resolving link...',
-          url: link,
-          thumbnail: previewSong?.thumbnail || ''
-        });
+        this.isSearching = false;
       },
       error: (error) => {
-        console.error('Error converting Spotify link:', error);
+        console.error('Error downloading song from Spotify:', error);
         this.songSelection.setDownloadStatus('error');
         this.isSearching = false;
       }
@@ -230,57 +244,97 @@ export class Sessions implements OnDestroy {
   }
 
   private performSearch(query: string) {
+    const requestId = ++this.searchRequestId;
     this.isSearching = true;
-    this.apiCall.searchSongs(query).subscribe({
+    this.searchResults = [];
+
+    this.apiCall.searchSpotifySongs(query).subscribe({
       next: (response) => {
-        console.log('Raw response:', response);
-        console.log('Response[0]:', response[0]);
-        console.log('Type of response[0]:', typeof response[0]);
-        
-        try {
-          // Si response[0] est une string JSON, on la parse
-          let parsedData;
-          if (typeof response[0] === 'string') {
-            parsedData = JSON.parse(response[0]);
-          } else {
-            parsedData = response[0];
-          }
-          
-          console.log('Parsed data:', parsedData);
-          
-          // Vérifier si parsedData est un array ou contient un array
-          if (Array.isArray(parsedData)) {
-            this.searchResults = parsedData;
-          } else if (parsedData && Array.isArray(parsedData.results)) {
-            this.searchResults = parsedData.results;
-          } else if (parsedData && Array.isArray(parsedData.songs)) {
-            this.searchResults = parsedData.songs;
-          } else {
-            console.warn('Unexpected data format:', parsedData);
-            this.searchResults = [];
-          }
-          
-          console.log('Final search results:', this.searchResults);
-        } catch (error) {
-          console.error('Error parsing search results:', error);
-          this.searchResults = [];
+        if (requestId !== this.searchRequestId) {
+          return;
         }
-        
-        this.isSearching = false;
+
+        const spotifyResults = this.extractResults(response, 'spotify');
+        this.searchResults = spotifyResults;
+
+        this.apiCall.searchYoutubeSongs(query).subscribe({
+          next: (youtubeResponse) => {
+            if (requestId !== this.searchRequestId) {
+              return;
+            }
+
+            const youtubeResults = this.extractResults(youtubeResponse, 'youtube');
+            this.searchResults = [...spotifyResults, ...youtubeResults];
+            this.isSearching = false;
+          },
+          error: (error) => {
+            console.error('Error searching YouTube songs:', error);
+            if (requestId !== this.searchRequestId) {
+              return;
+            }
+
+            this.isSearching = false;
+          }
+        });
       },
       error: (error) => {
-        console.error('Error searching songs:', error);
-        this.isSearching = false;
+        console.error('Error searching Spotify songs:', error);
+        if (requestId !== this.searchRequestId) {
+          return;
+        }
+
         this.searchResults = [];
+
+        this.apiCall.searchYoutubeSongs(query).subscribe({
+          next: (youtubeResponse) => {
+            if (requestId !== this.searchRequestId) {
+              return;
+            }
+
+            this.searchResults = this.extractResults(youtubeResponse, 'youtube');
+            this.isSearching = false;
+          },
+          error: (youtubeError) => {
+            console.error('Error searching YouTube songs:', youtubeError);
+            if (requestId !== this.searchRequestId) {
+              return;
+            }
+
+            this.searchResults = [];
+            this.isSearching = false;
+          }
+        });
       }
     });
+  }
+
+  private extractResults(response: any, expectedKind: 'spotify' | 'youtube'): any[] {
+    if (!response || response.length === 0) {
+      return [];
+    }
+
+    try {
+      const parsedData = typeof response[0] === 'string' ? JSON.parse(response[0]) : response[0];
+      const rawResults = Array.isArray(parsedData)
+        ? parsedData
+        : (Array.isArray(parsedData?.results) ? parsedData.results : []);
+
+      return rawResults.filter((item: any) => item?.kind === expectedKind);
+    } catch (error) {
+      console.error(`Error parsing ${expectedKind} search results:`, error);
+      return [];
+    }
   }
 
   selectSong(song: any) {
     console.log('Selected song:', song);
 
     if (song?.kind === 'spotify' || song?.kind === 'youtube') {
-      this.handleDirectLink(song.value || song.url || '', song);
+      if (song.kind === 'spotify') {
+        this.downloadFromSpotify(song.value || song.url || '', song);
+      } else {
+        this.downloadFromYouTube(song.value || song.url || '', song);
+      }
       return;
     }
     
@@ -295,39 +349,11 @@ export class Sessions implements OnDestroy {
     // Commencer le téléchargement
     this.songSelection.setDownloadStatus('downloading');
     
-    let ytbUrl = "";
-    
-    this.apiCall.spo2ytburl(song.external_urls?.spotify || song.url).subscribe({
-      next: (response) => {
-        ytbUrl = response.results[0].url;
-        console.log('YouTube URL:', ytbUrl);
-
-        this.apiCall.getSong(ytbUrl).subscribe({
-          next: (response) => {
-            console.log('Download Response:', response);
-            if (response && response.length > 0) {
-              const songData = JSON.parse(response[0]);
-              // Mettre à jour le service avec le chemin du fichier
-              this.songSelection.setSelectedSong({
-                title: songData.title || song.name || song.title || 'Unknown Title',
-                artist: song.artists?.[0]?.name || song.artist || 'Unknown Artist',
-                url: songData.url || ytbUrl,
-                thumbnail: songData.thumbnail || song.album_image || song.thumbnail || ''
-              });
-              this.songSelection.updateSongFilePath(songData.original_file);
-              this.songSelection.setDownloadStatus('downloaded');
-            }
-          },
-          error: (error) => {
-            console.error('Error downloading song:', error);
-            this.songSelection.setDownloadStatus('error');
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Error converting Spotify to YouTube:', error);
-        this.songSelection.setDownloadStatus('error');
-      }
+    this.downloadFromSpotify(song.external_urls?.spotify || song.url, {
+      title: song.name || song.title || 'Unknown Title',
+      artist: song.artists?.[0]?.name || song.artist || 'Unknown Artist',
+      url: song.external_urls?.spotify || song.url || '',
+      thumbnail: song.album_image || song.thumbnail || ''
     });
   }
 

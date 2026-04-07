@@ -57,6 +57,22 @@ export class ApiCallService {
     return this.http.post<string[]>(this.url, formData, { responseType: 'json' });
   }
 
+  searchSpotifySongs(query: string): Observable<string[]> {
+    const formData = new FormData();
+    formData.append('action', 'search_spotify_songs');
+    formData.append('query', query);
+
+    return this.http.post<string[]>(this.url, formData, { responseType: 'json' });
+  }
+
+  searchYoutubeSongs(query: string): Observable<string[]> {
+    const formData = new FormData();
+    formData.append('action', 'search_youtube_songs');
+    formData.append('query', query);
+
+    return this.http.post<string[]>(this.url, formData, { responseType: 'json' });
+  }
+
   getAudioFile(filename: string): string {
     return `${apiUrl}/downloads/${filename}`;
   }
